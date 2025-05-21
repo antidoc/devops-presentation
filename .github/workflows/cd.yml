@@ -99,7 +99,7 @@ jobs:
       - name: Terraform Workspace
         run: |
           cd infrastructure/terraform
-          terraform workspace select ${{ steps.env.outputs.terraform_workspace }} -or-create
+          terraform workspace select ${{ steps.env.outputs.terraform_workspace }} || terraform workspace new ${{ steps.env.outputs.terraform_workspace }}
 
       - name: Terraform Plan
         run: |
