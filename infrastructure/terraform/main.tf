@@ -62,7 +62,7 @@ module "db" {
   vpc_security_group_ids = [aws_security_group.rds.id]
   subnet_ids             = module.vpc.private_subnets
 
-  family = "postgresql16"
+  family = "postgres16"
 
   tags = var.tags
 }
