@@ -1,0 +1,75 @@
+/* Todo Form Styles */
+.todo-form-container,
+.todo-detail-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.todo-form-container h2,
+.todo-detail-container h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 22px;
+  color: #333;
+}
+
+.todo-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+  border-color: #0078d4;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.25);
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-group .checkbox-container {
+  display: flex;
+  align-items: center;
+  margin-left: 24px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 30px;
+  text-align: center;
+}

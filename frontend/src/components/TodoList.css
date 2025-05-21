@@ -1,0 +1,130 @@
+/* Todo List Styles */
+.todo-list {
+  margin-bottom: 30px;
+}
+
+.todo-list h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 22px;
+  color: #333;
+}
+
+.todo-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.todo-list li {
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+.todo-list li:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.todo-list li.completed {
+  background-color: #f0f8f0;
+  border-left: 4px solid #4caf50;
+}
+
+.todo-list li.completed .todo-title {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.todo-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.todo-title {
+  font-weight: 500;
+  color: #333;
+  text-decoration: none;
+  font-size: 18px;
+  margin-left: 8px;
+}
+
+.todo-description {
+  margin: 10px 0;
+  color: #555;
+  padding-left: 32px;
+}
+
+.todo-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.checkbox-container {
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+  font-size: 16px;
+  user-select: none;
+}
+
+.checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #eee;
+  border-radius: 4px;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+  background-color: #ccc;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+  background-color: #0078d4;
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.checkbox-container .checkmark:after {
+  left: 7px;
+  top: 3px;
+  width: 4px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.empty-list {
+  text-align: center;
+  padding: 30px;
+  font-size: 18px;
+  color: #777;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
