@@ -1,0 +1,64 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: db-backup
+  namespace: todoapp
+spec:
+  schedule: "0 1 * * *"  # Щоночі о 1 годині
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: postgres:15-alpine
+            command:
+            - /bin/sh
+            - -c
+            - |
+              apk add --no-cache aws-cli
+              
+              PGPASSWORD="$DB_PASSWORD" pg_dump -h $DB_HOST -U $DB_USER -d $DB_NAME | gzip > /tmp/backup_$(date +%Y%m%d_%H%M%S).sql.gz
+              
+              aws s3 cp /tmp/backup_*.sql.gz s3://${S3_BUCKET}/db_backups/
+              
+              rm /tmp/backup_*.sql.gz
+            env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: backup-config
+                  key: db_host
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: backup-config
+                  key: db_user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backup-config
+                  key: db_password
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: backup-config
+                  key: db_name
+            - name: S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: backup-config
+                  key: s3_bucket
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backup-config
+                  key: aws_access_key
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backup-config
+                  key: aws_secret_key
+            - name: AWS_DEFAULT_REGION
+              value: "us-east-1"
+          restartPolicy: OnFailure

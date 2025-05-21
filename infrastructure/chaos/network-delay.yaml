@@ -1,0 +1,20 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-delay-test
+  namespace: todoapp
+spec:
+  action: delay
+  mode: one
+  selector:
+    namespaces:
+      - todoapp
+    labelSelectors:
+      app: backend
+  delay:
+    latency: "200ms"
+    correlation: "100"
+    jitter: "50ms"
+  duration: "5m"
+  scheduler:
+    cron: "@every 24h"

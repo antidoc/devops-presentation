@@ -1,0 +1,159 @@
+name: CD
+
+on:
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1  # змініть на ваш регіон AWS
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Set environment
+        id: env
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create ECR repositories if not exist
+        run: |
+          aws ecr describe-repositories --repository-names todoapp-backend --region eu-central-1 || aws ecr create-repository --repository-name todoapp-backend --region eu-central-1
+          aws ecr describe-repositories --repository-names todoapp-frontend --region eu-central-1 || aws ecr create-repository --repository-name todoapp-frontend --region eu-central-1
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/todoapp-backend:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/todoapp-backend:${{ steps.env.outputs.environment }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/todoapp-frontend:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/todoapp-frontend:${{ steps.env.outputs.environment }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set environment
+        id: env
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+            echo "terraform_workspace=production" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "terraform_workspace=staging" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1  # змініть на ваш регіон AWS
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.3.0
+
+      - name: Terraform Init
+        run: |
+          cd infra/terraform
+          terraform init
+
+      - name: Terraform Workspace
+        run: |
+          cd infra/terraform
+          terraform workspace select ${{ steps.env.outputs.terraform_workspace }} || terraform workspace new ${{ steps.env.outputs.terraform_workspace }}
+
+      - name: Terraform Plan
+        run: |
+          cd infra/terraform
+          terraform plan -var="environment=${{ steps.env.outputs.environment }}" \
+                         -var="db_username=${{ secrets.DB_USERNAME }}" \
+                         -var="db_password=${{ secrets.DB_PASSWORD }}" \
+                         -var="aws_region=eu-central-1"  # змініть на ваш регіон AWS
+
+      - name: Terraform Apply
+        run: |
+          cd infra/terraform
+          terraform apply -var="environment=${{ steps.env.outputs.environment }}" \
+                          -var="db_username=${{ secrets.DB_USERNAME }}" \
+                          -var="db_password=${{ secrets.DB_PASSWORD }}" \
+                          -var="aws_region=eu-central-1" \  # змініть на ваш регіон AWS
+                          -auto-approve
+
+      - name: Get Terraform Outputs
+        id: terraform
+        run: |
+          cd infra/terraform
+          echo "db_host=$(terraform output -raw db_instance_address)" >> $GITHUB_OUTPUT
+          echo "redis_host=$(terraform output -raw redis_endpoint)" >> $GITHUB_OUTPUT
+          echo "eks_cluster=$(terraform output -raw eks_cluster_id)" >> $GITHUB_OUTPUT
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig --name ${{ steps.terraform.outputs.eks_cluster }} --region eu-central-1  # змініть на ваш регіон AWS
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Deploy to Kubernetes
+        run: |
+          cd infra/kubernetes
+          chmod +x deploy.sh
+          ./deploy.sh \
+            ${{ steps.env.outputs.environment }} \
+            ${{ steps.login-ecr.outputs.registry }}/todoapp-backend:${{ github.sha }} \
+            ${{ steps.login-ecr.outputs.registry }}/todoapp-frontend:${{ github.sha }} \
+            ${{ steps.terraform.outputs.db_host }} \
+            ${{ steps.terraform.outputs.redis_host }} \
+            ${{ secrets.DB_PASSWORD }}
+
+      - name: Wait for deployment to complete
+        run: |
+          kubectl rollout status deployment/backend -n todoapp
+          kubectl rollout status deployment/frontend -n todoapp
+
+      - name: Get Service URL
+        id: get-url
+        run: |
+          INGRESS_HOST=$(kubectl get ingress todoapp-ingress -n todoapp -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          echo "Application is available at: http://$INGRESS_HOST"
+          echo "app_url=http://$INGRESS_HOST" >> $GITHUB_OUTPUT
