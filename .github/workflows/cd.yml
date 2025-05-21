@@ -93,17 +93,17 @@ jobs:
 
       - name: Terraform Init
         run: |
-          cd infra/terraform
+          cd infrastructure/terraform
           terraform init
 
       - name: Terraform Workspace
         run: |
-          cd infra/terraform
+          cd infrastructure/terraform
           terraform workspace select ${{ steps.env.outputs.terraform_workspace }} || terraform workspace new ${{ steps.env.outputs.terraform_workspace }}
 
       - name: Terraform Plan
         run: |
-          cd infra/terraform
+          cd infrastructure/terraform
           terraform plan -var="environment=${{ steps.env.outputs.environment }}" \
                          -var="db_username=${{ secrets.DB_USERNAME }}" \
                          -var="db_password=${{ secrets.DB_PASSWORD }}" \
@@ -111,7 +111,7 @@ jobs:
 
       - name: Terraform Apply
         run: |
-          cd infra/terraform
+          cd infrastructure/terraform
           terraform apply -var="environment=${{ steps.env.outputs.environment }}" \
                           -var="db_username=${{ secrets.DB_USERNAME }}" \
                           -var="db_password=${{ secrets.DB_PASSWORD }}" \
@@ -121,7 +121,7 @@ jobs:
       - name: Get Terraform Outputs
         id: terraform
         run: |
-          cd infra/terraform
+          cd infrastructure/terraform
           echo "db_host=$(terraform output -raw db_instance_address)" >> $GITHUB_OUTPUT
           echo "redis_host=$(terraform output -raw redis_endpoint)" >> $GITHUB_OUTPUT
           echo "eks_cluster=$(terraform output -raw eks_cluster_id)" >> $GITHUB_OUTPUT
@@ -136,7 +136,7 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          cd infra/kubernetes
+          cd infrastructure/kubernetes
           chmod +x deploy.sh
           ./deploy.sh \
             ${{ steps.env.outputs.environment }} \
