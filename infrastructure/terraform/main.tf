@@ -50,7 +50,7 @@ module "db" {
   identifier = "${var.project_name}-${var.environment}"
 
   engine            = "postgres"
-  engine_version    = "15.3"
+  engine_version    = "16.3"
   instance_class    = var.db_instance_class
   allocated_storage = var.db_allocated_storage
 
@@ -61,6 +61,8 @@ module "db" {
 
   vpc_security_group_ids = [aws_security_group.rds.id]
   subnet_ids             = module.vpc.private_subnets
+
+  family = "postgresql16"
 
   tags = var.tags
 }
