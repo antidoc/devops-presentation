@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from prometheus_fastapi_instrumentator import Instrumentator
 from typing import List
-import os
 
 from .database import engine, get_db
 from . import models, schemas, crud
@@ -26,7 +25,10 @@ app.add_middleware(
 
 @app.get("/health")
 def health_check():
-    """Ендпоінт для перевірки здоров'я сервісу (для Kubernetes liveness probe)"""
+    """
+    Ендпоінт для перевірки здоров'я сервісу
+    (для Kubernetes liveness probe)
+    """
     return {"status": "healthy"}
 
 

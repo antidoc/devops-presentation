@@ -94,10 +94,12 @@ def test_update_todo():
 
 
 def test_delete_todo():
-    # Спочатку створюємо todo
     create_response = client.post(
         "/todos/",
-        json={"title": "Delete Me", "description": "Test delete", "completed": False},
+        json={
+            "title": "Delete Me",
+            "description": "Test delete",
+            "completed": False},
     )
     todo_id = create_response.json()["id"]
 
