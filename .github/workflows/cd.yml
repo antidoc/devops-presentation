@@ -107,16 +107,13 @@ jobs:
           terraform plan -var="environment=${{ steps.env.outputs.environment }}" \
                          -var="db_username=${{ secrets.DB_USERNAME }}" \
                          -var="db_password=${{ secrets.DB_PASSWORD }}" \
-                         -var="aws_region=eu-central-1"  # змініть на ваш регіон AWS
+                         -var="aws_region=eu-central-1" \
+                         -out=terraform.tfplan
 
       - name: Terraform Apply
         run: |
           cd infrastructure/terraform
-          terraform apply -var="environment=${{ steps.env.outputs.environment }}" \
-                          -var="db_username=${{ secrets.DB_USERNAME }}" \
-                          -var="db_password=${{ secrets.DB_PASSWORD }}" \
-                          -var="aws_region=eu-central-1" \  # змініть на ваш регіон AWS
-                          -auto-approve
+          terraform apply terraform.tfplan
 
       - name: Get Terraform Outputs
         id: terraform
