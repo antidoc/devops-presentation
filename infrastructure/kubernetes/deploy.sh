@@ -44,7 +44,7 @@ kubectl apply -f $TEMP_DIR/hpa.yaml
 
 # Перевірка статусу розгортання
 echo "Перевірка статусу розгортання..."
-kubectl rollout status deployment/backend -n todoapp
+#kubectl rollout status deployment/backend -n todoapp
 kubectl rollout status deployment/frontend -n todoapp
 
 echo "Розгортання успішно завершено!"
