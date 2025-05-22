@@ -42,7 +42,7 @@ variable "public_subnets" {
 variable "eks_desired_size" {
   description = "Desired size of EKS node group"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "eks_min_size" {
@@ -60,7 +60,7 @@ variable "eks_max_size" {
 variable "eks_instance_types" {
   description = "Instance types for EKS nodes"
   type        = list(string)
-  default     = ["t3.medium"]
+  default     = ["t3.small"]
 }
 
 variable "db_instance_class" {

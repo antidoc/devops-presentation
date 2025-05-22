@@ -86,42 +86,42 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-central-1  # змініть на ваш регіон AWS
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.7
-
-      - name: Terraform Init
-        run: |
-          cd infrastructure/terraform
-          terraform init
-
-      - name: Terraform Workspace
-        run: |
-          cd infrastructure/terraform
-          terraform workspace select ${{ steps.env.outputs.terraform_workspace }} || terraform workspace new ${{ steps.env.outputs.terraform_workspace }}
-
-      - name: Terraform Plan
-        run: |
-          cd infrastructure/terraform
-          terraform plan -var="environment=${{ steps.env.outputs.environment }}" \
-                         -var="db_username=${{ secrets.DB_USERNAME }}" \
-                         -var="db_password=${{ secrets.DB_PASSWORD }}" \
-                         -var="aws_region=eu-central-1" \
-                         -out=terraform.tfplan
-
-      - name: Terraform Apply
-        run: |
-          cd infrastructure/terraform
-          terraform apply terraform.tfplan
-
-      - name: Get Terraform Outputs
-        id: terraform
-        run: |
-          cd infrastructure/terraform
-          echo "db_host=$(terraform output -raw db_instance_address)" >> $GITHUB_OUTPUT
-          echo "redis_host=$(terraform output -raw redis_endpoint)" >> $GITHUB_OUTPUT
-          echo "eks_cluster=$(terraform output -raw eks_cluster_id)" >> $GITHUB_OUTPUT
+#      - name: Setup Terraform
+#        uses: hashicorp/setup-terraform@v2
+#        with:
+#          terraform_version: 1.5.7
+#
+#      - name: Terraform Init
+#        run: |
+#          cd infrastructure/terraform
+#          terraform init
+#
+#      - name: Terraform Workspace
+#        run: |
+#          cd infrastructure/terraform
+#          terraform workspace select ${{ steps.env.outputs.terraform_workspace }} || terraform workspace new ${{ steps.env.outputs.terraform_workspace }}
+#
+#      - name: Terraform Plan
+#        run: |
+#          cd infrastructure/terraform
+#          terraform plan -var="environment=${{ steps.env.outputs.environment }}" \
+#                         -var="db_username=${{ secrets.DB_USERNAME }}" \
+#                         -var="db_password=${{ secrets.DB_PASSWORD }}" \
+#                         -var="aws_region=eu-central-1" \
+#                         -out=terraform.tfplan
+#
+#      - name: Terraform Apply
+#        run: |
+#          cd infrastructure/terraform
+#          terraform apply terraform.tfplan
+#
+#      - name: Get Terraform Outputs
+#        id: terraform
+#        run: |
+#          cd infrastructure/terraform
+#          echo "db_host=$(terraform output -raw db_instance_address)" >> $GITHUB_OUTPUT
+#          echo "redis_host=$(terraform output -raw redis_endpoint)" >> $GITHUB_OUTPUT
+#          echo "eks_cluster=$(terraform output -raw eks_cluster_id)" >> $GITHUB_OUTPUT
 
       - name: Configure kubectl
         run: |

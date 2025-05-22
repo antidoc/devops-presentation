@@ -13,6 +13,8 @@ module "vpc" {
   private_subnets = var.private_subnets
   public_subnets  = var.public_subnets
 
+  create_database_subnet_group = true
+
   enable_nat_gateway = true
   single_nat_gateway = true
 
@@ -24,7 +26,7 @@ module "eks" {
   source = "terraform-aws-modules/eks/aws"
 
   cluster_name    = "${var.project_name}-${var.environment}"
-  cluster_version = "1.27"
+  cluster_version = "1.32"
 
   vpc_id                   = module.vpc.vpc_id
   subnet_ids               = module.vpc.private_subnets
@@ -59,7 +61,7 @@ module "db" {
   password = var.db_password
   port     = "5432"
 
-  vpc_security_group_ids = [aws_security_group.rds.id]
+  vpc_security_group_ids = []
   subnet_ids             = module.vpc.private_subnets
 
   family = "postgres16"
@@ -67,25 +69,25 @@ module "db" {
   tags = var.tags
 }
 
-# Redis для кешування
-resource "aws_elasticache_subnet_group" "redis" {
-  name       = "${var.project_name}-${var.environment}-redis-subnet-group"
-  subnet_ids = module.vpc.private_subnets
-}
-
-resource "aws_elasticache_cluster" "redis" {
-  cluster_id           = "${var.project_name}-${var.environment}"
-  engine               = "redis"
-  node_type            = var.redis_node_type
-  num_cache_nodes      = 1
-  parameter_group_name = "default.redis7"
-  engine_version       = "7.0"
-  port                 = 6379
-  subnet_group_name    = aws_elasticache_subnet_group.redis.name
-  security_group_ids   = [aws_security_group.redis.id]
-
-  tags = var.tags
-}
+# # Redis для кешування
+# resource "aws_elasticache_subnet_group" "redis" {
+#   name       = "${var.project_name}-${var.environment}-redis-subnet-group"
+#   subnet_ids = module.vpc.private_subnets
+# }
+#
+# resource "aws_elasticache_cluster" "redis" {
+#   cluster_id           = "${var.project_name}-${var.environment}"
+#   engine               = "redis"
+#   node_type            = var.redis_node_type
+#   num_cache_nodes      = 1
+#   parameter_group_name = "default.redis7"
+#   engine_version       = "7.0"
+#   port                 = 6379
+#   subnet_group_name    = aws_elasticache_subnet_group.redis.name
+#   security_group_ids   = [aws_security_group.redis.id]
+#
+#   tags = var.tags
+# }
 
 # Security Groups
 resource "aws_security_group" "rds" {
@@ -97,7 +99,7 @@ resource "aws_security_group" "rds" {
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
-    security_groups = [module.eks.node_security_group_id]
+    cidr_blocks = [module.vpc.vpc_cidr_block]
   }
 
   egress {
@@ -119,7 +121,7 @@ resource "aws_security_group" "redis" {
     from_port   = 6379
     to_port     = 6379
     protocol    = "tcp"
-    security_groups = [module.eks.node_security_group_id]
+    cidr_blocks = [module.vpc.vpc_cidr_block]
   }
 
   egress {
