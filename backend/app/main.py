@@ -13,14 +13,14 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="TodoApp API")
 Instrumentator().instrument(app).expose(app)
 
-# Налаштування CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend URL
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# # Налаштування CORS
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["http://localhost:3000"],  # Frontend URL
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 
 @app.get("/health")
